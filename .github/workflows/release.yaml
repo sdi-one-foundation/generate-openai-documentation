@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GLOBAL_VERSION: "v1"
+
+    steps:
+      - name: Get the VERSION
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Auto Release Notes
+        if: ${{ success() }}
+        uses: sdi-one-foundation/auto-release-notes-action@v1
+        with:
+          github-token: ${{ secrets.DEVOPS_BOT_TOKEN }}
+          version: ${{ env.VERSION }}
+          service-name: ${{ github.event.repository.name }}
+          team-name: ${{ github.repository_owner }}
+          ms-teams-webhook-url: ${{ secrets.MS_TEAMS_RELEASE_WEBHOOK_URL }}
+        # Following action creates global tag to be used alongside new tag (example: v1 points to recent tags in version 1.  Need to change above input when change major versions)
+      - name: Git config
+        run: |
+          git config user.name sdi-devops-bot
+          git config user.email sdi-devops-bot@one.singledigits.com
+
+      - name: Tag new target with global tag
+        run: git tag -f ${{ env.GLOBAL_VERSION }} ${{ env.VERSION }}
+
+      - name: Push new global tag
+        run: git push origin ${{ env.GLOBAL_VERSION }} --force
