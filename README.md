@@ -1,5 +1,5 @@
 # generate-openai-documentation
-A composite Github Action to automatically generate OpenAI Documentation for Single Digits services.
+A composite Github Action to automatically generate OpenAI Documentation for Single Digits services in the sdi-one-architecture repostory named centralized-openapi-specs.
 
 Example release.yaml that uses this action:
 
