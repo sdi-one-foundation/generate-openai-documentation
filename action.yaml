@@ -7,61 +7,9 @@ inputs:
   team-name:
     description: 'Name of team that owns application.'
     required: true
-  environment:
-    description: 'Name of environment calling this action.'
-    required: true
 runs:
   using: "composite"
   steps:
-    - name: Set globals
-      id: globals
-      shell: bash
-      run: |
-        echo "POSTGRES_USER=devopsbot" >> "${GITHUB_OUTPUT}"
-        echo "POSTGRES_PASSWORD=devopsbot" >> "${GITHUB_OUTPUT}"
-        echo "POSTGRES_DATABASE_NAME=openai_generation" >> "${GITHUB_OUTPUT}"
-
-    - name: Set up PostgreSQL service
-      shell: bash
-      run: |
-        docker run -d \
-          --name postgres \
-          -e POSTGRES_DB= ${{ steps.globals.outputs.POSTGRES_DATABASE_NAME }} \
-          -e POSTGRES_USER= ${{ steps.globals.outputs.POSTGRES_USER }} \
-          -e POSTGRES_PASSWORD= ${{ steps.globals.outputs.POSTGRES_PASSWORD }} \
-          -p 5432:5432 \
-          --health-cmd "pg_isready -U ${{ steps.globals.outputs.POSTGRES_USER }} -d ${{ steps.globals.outputs.POSTGRES_DATABASE_NAME }}" \
-          --health-interval 10s \
-          --health-timeout 5s \
-          --health-retries 5 \
-          postgres:latest
-
-    - name: Setup JDK 17
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'corretto'
-        java-version: 17
-        cache: 'maven'
-
-    - name: Wait for PostgreSQL
-      shell: bash
-      run: |
-        until pg_isready -h localhost -p 5432 -U ${{ steps.globals.outputs.POSTGRES_USER }} -d ${{ steps.globals.outputs.POSTGRES_DATABASE_NAME }}; do
-          echo "Waiting for PostgreSQL to be ready..."
-          sleep 5
-        done
-
-    - name: Maven - Verify & Generate OpenAPI Documentation
-      shell: bash
-      run: mvn clean verify -Pintegrationtest --settings ${{ github.action_path }}/settings.xml
-      env:
-        DATABASE_URL: localhost
-        DATABASE_PORT: 5432
-        DATABASE_USER: ${{ steps.globals.outputs.POSTGRES_USER }}
-        DATABASE_PASSWORD: ${{ steps.globals.outputs.POSTGRES_PASSWORD }}
-        DATABASE_NAME: ${{ steps.globals.outputs.POSTGRES_DATABASE_NAME }}
-        AWS_REGION: local
-
     - name: Publish OpenAPI Documentation
       if: ${{ inputs.environment == 'production' }}
       shell: bash
