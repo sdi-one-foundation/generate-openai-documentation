@@ -7,6 +7,9 @@ inputs:
   team-name:
     description: 'Name of team that owns application.'
     required: true
+  file-output-path:
+    description: 'Path to file that includes file name.  eg. /path/to/file.txt'
+    required: true
 runs:
   using: "composite"
   steps:
@@ -17,11 +20,11 @@ runs:
          eval `ssh-agent -s`
          ssh-add - <<< '${{ secrets.CENTRALIZED_OPENAPI_SPEC_REPO_DEPLOY_PRIVATE_KEY }}'
          git clone git@github.com:sdi-one-architecture/centralized-openapi-specs.git
-         cp target/generated-api/${{ inputs.service-name }}.openapi.json centralized-openapi-specs/${{ inputs.team-name }}/
+         cp --force ${{ inputs.file-output-path }} centralized-openapi-specs/${{ inputs.team-name }}/
          cd centralized-openapi-specs
          git config --global user.email "${{ secrets.DEVOPS_BOT_EMAIL }}"
          git config --global user.name "${{ secrets.DEVOPS_BOT_USERNAME }}"
-         git add ${{ inputs.team-name }}/${{ inputs.service-name }}.openapi.json
+         git add .
          if git diff-index --quiet HEAD; then
             echo "No changes to commit"
          else
