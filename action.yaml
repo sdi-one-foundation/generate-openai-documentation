@@ -1,0 +1,34 @@
+name: 'Auto Release Notes'
+description: 'Github action to have auto release notes published to Microsoft Teams'
+inputs:
+  service-name:
+    description: 'Name of service being deployed.'
+    required: true
+  team-name:
+    description: 'Name of team that owns application.'
+    required: true
+  file-output-path:
+    description: 'Path to file that includes file name.  eg. /path/to/file.txt'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Publish OpenAPI Documentation
+      if: ${{ inputs.environment == 'production' }}
+      shell: bash
+      run: |
+         eval `ssh-agent -s`
+         ssh-add - <<< '${{ secrets.CENTRALIZED_OPENAPI_SPEC_REPO_DEPLOY_PRIVATE_KEY }}'
+         git clone git@github.com:sdi-one-architecture/centralized-openapi-specs.git
+         cp --force ${{ inputs.file-output-path }} centralized-openapi-specs/${{ inputs.team-name }}/
+         cd centralized-openapi-specs
+         git config --global user.email "${{ secrets.DEVOPS_BOT_EMAIL }}"
+         git config --global user.name "${{ secrets.DEVOPS_BOT_USERNAME }}"
+         git add .
+         if git diff-index --quiet HEAD; then
+            echo "No changes to commit"
+         else
+            git commit -m "docs: Update OpenAPI specs for ${{ inputs.service-name }}"
+            git push
+         fi
+
