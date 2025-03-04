@@ -18,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Docker Add Release Tag
+      - name: Publish OpenAI Documentation
         uses: sdi-one-foundation/generate-openai-documentation@v1
         with:
           service-name: ${{ github.repository }}
