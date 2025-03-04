@@ -26,6 +26,9 @@ jobs:
 #          team-name: ${{ github.repository_owner }}
 #          ms-teams-webhook-url: ${{ secrets.MS_TEAMS_RELEASE_WEBHOOK_URL }}
 
+      - name: Checkout
+        uses: actions/checkout@v2
+
         # Following action creates global tag to be used alongside new tag (example: v1 points to recent tags in version 1.  Need to change above input when change major versions)
       - name: Git config
         run: |
